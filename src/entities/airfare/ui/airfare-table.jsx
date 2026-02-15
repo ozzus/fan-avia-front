@@ -1,5 +1,6 @@
-import { buildAviasalesLink } from '../../../shared/lib/build-aviasales-link'
+﻿import { buildAviasalesLink } from '../../../shared/lib/build-aviasales-link'
 import { resolveRouteByDirection } from '../../../shared/lib/airfare-offer'
+import { saveAviasalesRoute } from '../../../shared/lib/save-aviasales-route'
 
 const slotTitleMap = {
   FARE_SLOT_OUT_D_MINUS_2: 'Outbound: 2 days before',
@@ -54,10 +55,23 @@ function AirfareTable({ data, loading, error, originIata, destinationIata }) {
               <h4>{slotTitleMap[slot.slot] || slot.slot}</h4>
               <p className="muted">{slot.date}</p>
               <p className="price">{slot.prices?.length ? formatPrice(Math.min(...slot.prices.map(Number))) : 'No prices'}</p>
-              <small>{slot.prices?.length ? `Options: ${slot.prices.map((item) => formatPrice(item)).join(' � ')}` : ''}</small>
+              <small>{slot.prices?.length ? `Options: ${slot.prices.map((item) => formatPrice(item)).join(' • ')}` : ''}</small>
 
               {buyLink ? (
-                <a href={buyLink} target="_blank" rel="noreferrer" className="buy-flight-link">
+                <a
+                  href={buyLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="buy-flight-link"
+                  onClick={() =>
+                    saveAviasalesRoute({
+                      originIata: route.origin,
+                      destinationIata: route.destination,
+                      departDate: slot.date,
+                      source: 'airfare-slot',
+                    })
+                  }
+                >
                   Buy via Aviasales
                 </a>
               ) : null}

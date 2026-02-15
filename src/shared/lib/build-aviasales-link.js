@@ -1,19 +1,51 @@
 import { affiliateConfig } from '../config/affiliate'
 
+const DEFAULT_AVIASALES_SEARCH_URL = 'https://www.aviasales.ru/'
+
+function formatRouteDate(dateIso) {
+  const date = new Date(`${dateIso}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  const day = String(date.getUTCDate()).padStart(2, '0')
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+  return `${day}${month}`
+}
+
+function resolveBaseUrl() {
+  const raw = (affiliateConfig.baseUrl || '').trim() || DEFAULT_AVIASALES_SEARCH_URL
+
+  try {
+    const parsed = new URL(raw)
+    // Keep deep-link generation stable: always use aviasales search path format.
+    parsed.protocol = 'https:'
+    parsed.host = 'www.aviasales.ru'
+    parsed.pathname = '/'
+    parsed.search = ''
+    parsed.hash = ''
+    return parsed.toString()
+  } catch {
+    return DEFAULT_AVIASALES_SEARCH_URL
+  }
+}
+
 export function buildAviasalesLink({ originIata, destinationIata, departDate }) {
   if (!originIata || !destinationIata || !departDate) {
     return ''
   }
 
-  const url = new URL(affiliateConfig.baseUrl)
-  url.searchParams.set('origin_iata', originIata.toUpperCase())
-  url.searchParams.set('destination_iata', destinationIata.toUpperCase())
-  url.searchParams.set('depart_date', departDate)
-  url.searchParams.set('one_way', 'true')
-  url.searchParams.set('adults', '1')
-  url.searchParams.set('children', '0')
-  url.searchParams.set('infants', '0')
-  url.searchParams.set('trip_class', '0')
+  const routeDate = formatRouteDate(departDate)
+  if (!routeDate) {
+    return ''
+  }
+
+  const origin = originIata.toUpperCase()
+  const destination = destinationIata.toUpperCase()
+  const routeToken = `${origin}${routeDate}${destination}1`
+
+  const url = new URL(resolveBaseUrl())
+  url.pathname = `/search/${routeToken}`
   url.searchParams.set('locale', affiliateConfig.locale)
   url.searchParams.set('currency', affiliateConfig.currency)
 

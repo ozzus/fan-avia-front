@@ -3,6 +3,7 @@ import AirfareTable from '../entities/airfare/ui/airfare-table'
 import { fetchAirfareByMatch } from '../entities/airfare/api/fetch-airfare-by-match'
 import { fetchMatchById } from '../entities/match/api/fetch-match-by-id'
 import { pickBestAirfareOption } from '../shared/lib/airfare-offer'
+import { saveAviasalesRoute } from '../shared/lib/save-aviasales-route'
 import { originCities } from '../shared/config/origin-cities'
 import { getDefaultOrigin, resolveOriginInput } from '../shared/lib/origin'
 import CitySelect from '../shared/ui/city-select'
@@ -132,7 +133,20 @@ function MatchPage({ matchId }) {
               ) : null}
 
               {bestOption?.link ? (
-                <a href={bestOption.link} className="hero-cta" target="_blank" rel="noreferrer">
+                <a
+                  href={bestOption.link}
+                  className="hero-cta"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() =>
+                    saveAviasalesRoute({
+                      originIata: bestOption.originIata,
+                      destinationIata: bestOption.destinationIata,
+                      departDate: bestOption.date,
+                      source: 'best-fare',
+                    })
+                  }
+                >
                   Best fare: {formatPrice(bestOption.price)}
                 </a>
               ) : null}

@@ -44,6 +44,8 @@ export function pickBestAirfareOption(airfareData, originIata, destinationIata) 
           slot: slot.slot,
           direction: slot.direction,
           date: slot.date,
+          originIata: route.origin,
+          destinationIata: route.destination,
           link: buildAviasalesLink({
             originIata: route.origin,
             destinationIata: route.destination,
