@@ -1,23 +1,30 @@
 ﻿import { buildAviasalesLink } from '../../../shared/lib/build-aviasales-link'
 import { resolveRouteByDirection } from '../../../shared/lib/airfare-offer'
 import { saveAviasalesRoute } from '../../../shared/lib/save-aviasales-route'
+import { useI18n } from '../../../shared/i18n/use-i18n'
 
 const slotTitleMap = {
-  FARE_SLOT_OUT_D_MINUS_2: 'Outbound: 2 days before',
-  FARE_SLOT_OUT_D_MINUS_1: 'Outbound: 1 day before',
-  FARE_SLOT_OUT_D0_ARRIVE_BY: 'Outbound: match day',
-  FARE_SLOT_RET_D0_DEPART_AFTER: 'Return: match day',
-  FARE_SLOT_RET_D_PLUS_1: 'Return: next day',
-  FARE_SLOT_RET_D_PLUS_2: 'Return: +2 days',
+  FARE_SLOT_OUT_D_MINUS_2: 'airfare.slots.FARE_SLOT_OUT_D_MINUS_2',
+  FARE_SLOT_OUT_D_MINUS_1: 'airfare.slots.FARE_SLOT_OUT_D_MINUS_1',
+  FARE_SLOT_OUT_D0_ARRIVE_BY: 'airfare.slots.FARE_SLOT_OUT_D0_ARRIVE_BY',
+  FARE_SLOT_RET_D0_DEPART_AFTER: 'airfare.slots.FARE_SLOT_RET_D0_DEPART_AFTER',
+  FARE_SLOT_RET_D_PLUS_1: 'airfare.slots.FARE_SLOT_RET_D_PLUS_1',
+  FARE_SLOT_RET_D_PLUS_2: 'airfare.slots.FARE_SLOT_RET_D_PLUS_2',
 }
 
-function formatPrice(value) {
-  return `${new Intl.NumberFormat('ru-RU').format(Number(value))} RUB`
+function formatPrice(value, locale) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'RUB',
+    maximumFractionDigits: 0,
+  }).format(Number(value))
 }
 
 function AirfareTable({ data, loading, error, originIata, destinationIata }) {
+  const { locale, t } = useI18n()
+
   if (loading) {
-    return <p className="muted">Loading airfare...</p>
+    return <p className="muted">{t('airfare.loading')}</p>
   }
 
   if (error) {
@@ -25,16 +32,16 @@ function AirfareTable({ data, loading, error, originIata, destinationIata }) {
   }
 
   if (!data?.slots?.length) {
-    return <p className="muted">Select a match to load airfare slots.</p>
+    return <p className="muted">{t('airfare.selectMatch')}</p>
   }
 
   return (
     <div className="airfare-box">
       <div className="airfare-head">
-        <h3>Airfare slots</h3>
+        <h3>{t('airfare.title')}</h3>
         {data.ticketsLink ? (
           <a href={data.ticketsLink} target="_blank" rel="noreferrer" className="ticket-link">
-            Match tickets
+            {t('airfare.matchTickets')}
           </a>
         ) : null}
       </div>
@@ -50,12 +57,14 @@ function AirfareTable({ data, loading, error, originIata, destinationIata }) {
               })
             : ''
 
+          const slotTitleKey = slotTitleMap[slot.slot]
+
           return (
             <article key={`${slot.slot}_${slot.date}`} className="slot-card" style={{ animationDelay: `${index * 60}ms` }}>
-              <h4>{slotTitleMap[slot.slot] || slot.slot}</h4>
+              <h4>{slotTitleKey ? t(slotTitleKey) : slot.slot}</h4>
               <p className="muted">{slot.date}</p>
-              <p className="price">{slot.prices?.length ? formatPrice(Math.min(...slot.prices.map(Number))) : 'No prices'}</p>
-              <small>{slot.prices?.length ? `Options: ${slot.prices.map((item) => formatPrice(item)).join(' • ')}` : ''}</small>
+              <p className="price">{slot.prices?.length ? formatPrice(Math.min(...slot.prices.map(Number)), locale) : t('airfare.noPrices')}</p>
+              <small>{slot.prices?.length ? `${t('airfare.options')}: ${slot.prices.map((item) => formatPrice(item, locale)).join(' • ')}` : ''}</small>
 
               {buyLink ? (
                 <a
@@ -72,7 +81,7 @@ function AirfareTable({ data, loading, error, originIata, destinationIata }) {
                     })
                   }
                 >
-                  Buy via Aviasales
+                  {t('airfare.buyViaAviasales')}
                 </a>
               ) : null}
             </article>
@@ -84,3 +93,4 @@ function AirfareTable({ data, loading, error, originIata, destinationIata }) {
 }
 
 export default AirfareTable
+

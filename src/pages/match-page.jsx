@@ -6,16 +6,20 @@ import { pickBestAirfareOption } from '../shared/lib/airfare-offer'
 import { saveAviasalesRoute } from '../shared/lib/save-aviasales-route'
 import { originCities } from '../shared/config/origin-cities'
 import { getDefaultOrigin, resolveOriginInput } from '../shared/lib/origin'
+import { useI18n } from '../shared/i18n/use-i18n'
 import CitySelect from '../shared/ui/city-select'
+import LanguageSwitcher from '../shared/ui/language-switcher'
 
 function getInitialOrigin() {
   const params = new URLSearchParams(window.location.search)
   const defaultOrigin = getDefaultOrigin()
 
-  return resolveOriginInput({
-    city: params.get('origin_city'),
-    iata: params.get('origin_iata'),
-  }) || defaultOrigin
+  return (
+    resolveOriginInput({
+      city: params.get('origin_city'),
+      iata: params.get('origin_iata'),
+    }) || defaultOrigin
+  )
 }
 
 function updateOriginQuery(matchId, origin) {
@@ -25,11 +29,16 @@ function updateOriginQuery(matchId, origin) {
   window.history.replaceState(null, '', `/matches/${matchId}?${params.toString()}`)
 }
 
-function formatPrice(value) {
-  return `${new Intl.NumberFormat('ru-RU').format(Number(value))} RUB`
+function formatPrice(value, locale) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'RUB',
+    maximumFractionDigits: 0,
+  }).format(Number(value))
 }
 
 function MatchPage({ matchId }) {
+  const { locale, t } = useI18n()
   const initialOrigin = getInitialOrigin()
   const [originCity, setOriginCity] = useState(initialOrigin.city)
 
@@ -41,10 +50,7 @@ function MatchPage({ matchId }) {
   const [airfareLoading, setAirfareLoading] = useState(false)
   const [airfareError, setAirfareError] = useState('')
 
-  const resolvedOrigin = useMemo(
-    () => resolveOriginInput({ city: originCity }),
-    [originCity],
-  )
+  const resolvedOrigin = useMemo(() => resolveOriginInput({ city: originCity }), [originCity])
 
   const bestOption = useMemo(
     () => pickBestAirfareOption(airfareData, resolvedOrigin?.iata, match?.destination_airport_iata),
@@ -98,7 +104,7 @@ function MatchPage({ matchId }) {
 
     if (!resolvedOrigin) {
       setAirfareData(null)
-      setAirfareError('Select origin city from list')
+      setAirfareError(t('errors.selectOriginFromList'))
       return
     }
 
@@ -108,27 +114,38 @@ function MatchPage({ matchId }) {
   return (
     <main className="page page-detail">
       <div className="top-nav">
-        <a href="/" className="back-link">&larr; Back to matches</a>
+        <a href="/" className="back-link">
+          &larr; {t('matchPage.backToMatches')}
+        </a>
+        <LanguageSwitcher />
       </div>
 
-      {matchLoading ? <p className="muted">Loading match...</p> : null}
+      {matchLoading ? <p className="muted">{t('matchPage.loadingMatch')}</p> : null}
       {matchError ? <p className="error">{matchError}</p> : null}
 
       {match ? (
         <>
           <section className="hero hero-match">
-            <p className="eyebrow">Match #{match.match_id}</p>
-            <h1>{match.city || 'Unknown city'} • {match.stadium || 'Unknown stadium'}</h1>
+            <p className="eyebrow">{t('matchPage.matchNumber', { id: match.match_id })}</p>
+            <h1>
+              {match.city || t('matchPage.unknownCity')} • {match.stadium || t('matchPage.unknownStadium')}
+            </h1>
             <div className="match-meta">
-              <span className="match-pill">Kickoff: {new Date(match.kickoff_utc).toLocaleString()}</span>
-              <span className="match-pill">Airport: {match.destination_airport_iata || '-'}</span>
-              <span className="match-pill">Clubs: {match.club_home_id || '-'} / {match.club_away_id || '-'}</span>
+              <span className="match-pill">
+                {t('matchPage.kickoff')}: {new Date(match.kickoff_utc).toLocaleString(locale)}
+              </span>
+              <span className="match-pill">
+                {t('matchPage.airport')}: {match.destination_airport_iata || t('common.na')}
+              </span>
+              <span className="match-pill">
+                {t('matchPage.clubs')}: {match.club_home_id || t('common.na')} / {match.club_away_id || t('common.na')}
+              </span>
             </div>
 
             <div className="hero-actions">
               {match.tickets_link ? (
                 <a href={match.tickets_link} className="ticket-link" target="_blank" rel="noreferrer">
-                  Buy match ticket
+                  {t('matchPage.buyMatchTicket')}
                 </a>
               ) : null}
 
@@ -147,15 +164,13 @@ function MatchPage({ matchId }) {
                     })
                   }
                 >
-                  Best fare: {formatPrice(bestOption.price)}
+                  {t('matchPage.bestFare', { price: formatPrice(bestOption.price, locale) })}
                 </a>
               ) : null}
             </div>
 
             {bestOption ? (
-              <p className="hero-cta-note">
-                Slot: {bestOption.slot} • Date: {bestOption.date}
-              </p>
+              <p className="hero-cta-note">{t('matchPage.slotDate', { slot: bestOption.slot, date: bestOption.date })}</p>
             ) : null}
           </section>
 
@@ -165,13 +180,14 @@ function MatchPage({ matchId }) {
                 value={originCity}
                 options={originCities}
                 onChange={setOriginCity}
-                label="Origin city"
-                placeholder="Москва"
+                label={t('search.originCityLabel')}
+                placeholder={t('search.originPlaceholder')}
+                emptyText={t('citySelect.noResults')}
                 inputId="origin-city-detail"
               />
 
               <button type="submit" disabled={airfareLoading}>
-                {airfareLoading ? 'Loading...' : 'Refresh airfare'}
+                {airfareLoading ? t('search.loading') : t('search.refreshAirfare')}
               </button>
             </form>
 
@@ -190,3 +206,4 @@ function MatchPage({ matchId }) {
 }
 
 export default MatchPage
+

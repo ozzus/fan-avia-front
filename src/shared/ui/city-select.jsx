@@ -10,6 +10,7 @@ function CitySelect({
   onChange,
   label = 'Origin city',
   placeholder = 'Москва',
+  emptyText = 'No matches for city',
   inputId,
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -90,9 +91,7 @@ function CitySelect({
               </li>
             ))}
 
-            {!filteredOptions.length ? (
-              <li className="city-select-empty">No matches for city</li>
-            ) : null}
+            {!filteredOptions.length ? <li className="city-select-empty">{emptyText}</li> : null}
           </ul>
         ) : null}
       </div>

@@ -6,16 +6,18 @@ import AirfareTable from '../entities/airfare/ui/airfare-table'
 import MatchSearchForm from '../features/match-search/ui/match-search-form'
 import { originCities } from '../shared/config/origin-cities'
 import { getDefaultOrigin, resolveOriginInput } from '../shared/lib/origin'
+import { useI18n } from '../shared/i18n/use-i18n'
 
 const DEFAULT_LIMIT = 12
 
 function getInitialParams() {
   const params = new URLSearchParams(window.location.search)
   const defaultOrigin = getDefaultOrigin()
-  const resolvedOrigin = resolveOriginInput({
-    city: params.get('origin_city'),
-    iata: params.get('origin_iata'),
-  }) || defaultOrigin
+  const resolvedOrigin =
+    resolveOriginInput({
+      city: params.get('origin_city'),
+      iata: params.get('origin_iata'),
+    }) || defaultOrigin
 
   return {
     originCity: resolvedOrigin.city,
@@ -41,6 +43,7 @@ function updateQuery(originCity, originIata, selectedMatchId) {
 }
 
 function MatchAirfareDashboard() {
+  const { t } = useI18n()
   const initial = getInitialParams()
 
   const [originCity, setOriginCity] = useState(initial.originCity)
@@ -61,10 +64,7 @@ function MatchAirfareDashboard() {
 
   const selectedMatch = selectedItem?.match || null
 
-  const resolvedOrigin = useMemo(
-    () => resolveOriginInput({ city: originCity }),
-    [originCity],
-  )
+  const resolvedOrigin = useMemo(() => resolveOriginInput({ city: originCity }), [originCity])
 
   async function loadAirfare(matchId, originIata, currentOriginCity = originCity) {
     setAirfareLoading(true)
@@ -94,9 +94,9 @@ function MatchAirfareDashboard() {
 
     const origin = resolveOriginInput({ city: originCity })
     if (!origin) {
-      setMatches([])
+      setItems([])
       setSelectedMatchId('')
-      setLoadError('Select origin city from list')
+      setLoadError(t('errors.selectOriginFromList'))
       setMatchesLoading(false)
       return
     }
@@ -141,7 +141,7 @@ function MatchAirfareDashboard() {
 
     if (!resolvedOrigin) {
       setAirfareData(null)
-      setAirfareError('Select origin city from list')
+      setAirfareError(t('errors.selectOriginFromList'))
       return
     }
 
@@ -162,18 +162,13 @@ function MatchAirfareDashboard() {
 
       <section className="content-grid">
         <div>
-          <h2>Upcoming matches</h2>
-          <MatchList
-            items={items}
-            selectedMatchId={selectedMatchId}
-            onSelect={handleSelectMatch}
-            originCity={originCity}
-          />
+          <h2>{t('dashboard.upcomingMatches')}</h2>
+          <MatchList items={items} selectedMatchId={selectedMatchId} onSelect={handleSelectMatch} originCity={originCity} />
         </div>
 
         <div>
-          <h2>Airfare</h2>
-          {selectedMatch ? <p className="muted">Selected match #{selectedMatch.match_id}</p> : null}
+          <h2>{t('dashboard.airfare')}</h2>
+          {selectedMatch ? <p className="muted">{t('dashboard.selectedMatch', { id: selectedMatch.match_id })}</p> : null}
           <AirfareTable
             data={airfareData}
             loading={airfareLoading}
@@ -188,3 +183,5 @@ function MatchAirfareDashboard() {
 }
 
 export default MatchAirfareDashboard
+
+

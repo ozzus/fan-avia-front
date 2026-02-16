@@ -1,0 +1,163 @@
+﻿export const DEFAULT_LOCALE = 'ru'
+export const SUPPORTED_LOCALES = ['ru', 'en']
+
+export const dictionaries = {
+  ru: {
+    language: {
+      label: 'Язык интерфейса',
+      short: {
+        ru: 'RU',
+        en: 'EN',
+      },
+    },
+    home: {
+      eyebrow: 'Fan Avia',
+      title: 'Футбольные выезды и живые цены на перелеты',
+      subtitle: 'Выбирайте матчи, переходите к билетам и сравнивайте цены на вылет и возврат вокруг времени начала игры.',
+    },
+    search: {
+      originCityLabel: 'Город вылета',
+      originPlaceholder: 'Москва',
+      loading: 'Загрузка...',
+      reloadMatches: 'Обновить матчи',
+      refreshAirfare: 'Обновить перелеты',
+    },
+    errors: {
+      selectOriginFromList: 'Выберите город вылета из списка',
+    },
+    dashboard: {
+      upcomingMatches: 'Ближайшие матчи',
+      airfare: 'Перелеты',
+      selectedMatch: 'Выбран матч #{{id}}',
+    },
+    matchPage: {
+      backToMatches: 'К списку матчей',
+      loadingMatch: 'Загрузка матча...',
+      matchNumber: 'Матч #{{id}}',
+      unknownCity: 'Неизвестный город',
+      unknownStadium: 'Неизвестный стадион',
+      kickoff: 'Начало',
+      airport: 'Аэропорт',
+      clubs: 'Клубы',
+      buyMatchTicket: 'Купить билет на матч',
+      bestFare: 'Лучший тариф: {{price}}',
+      slotDate: 'Слот: {{slot}} • Дата: {{date}}',
+    },
+    matchList: {
+      empty: 'Матчи пока не загружены.',
+      matchNumber: 'Матч #{{id}}',
+      city: 'Город',
+      stadium: 'Стадион',
+      destinationAirport: 'Аэропорт назначения',
+      homeAway: 'Хозяева/Гости',
+      airfare: 'Перелет',
+      bestAirfare: 'Лучший перелет',
+      from: 'от',
+      noPrices: 'пока нет цен',
+      openDetails: 'Открыть детали',
+      buyMatchTicket: 'Купить билет на матч',
+    },
+    airfare: {
+      loading: 'Загрузка перелетов...',
+      selectMatch: 'Выберите матч, чтобы загрузить слоты перелетов.',
+      title: 'Слоты перелетов',
+      matchTickets: 'Билеты на матч',
+      noPrices: 'Цен нет',
+      options: 'Варианты',
+      buyViaAviasales: 'Купить на Aviasales',
+      slots: {
+        FARE_SLOT_OUT_D_MINUS_2: 'Туда: за 2 дня до матча',
+        FARE_SLOT_OUT_D_MINUS_1: 'Туда: за 1 день до матча',
+        FARE_SLOT_OUT_D0_ARRIVE_BY: 'Туда: в день матча',
+        FARE_SLOT_RET_D0_DEPART_AFTER: 'Обратно: в день матча',
+        FARE_SLOT_RET_D_PLUS_1: 'Обратно: на следующий день',
+        FARE_SLOT_RET_D_PLUS_2: 'Обратно: через 2 дня',
+      },
+    },
+    citySelect: {
+      noResults: 'Города не найдены',
+    },
+    common: {
+      na: '-',
+    },
+  },
+  en: {
+    language: {
+      label: 'Interface language',
+      short: {
+        ru: 'RU',
+        en: 'EN',
+      },
+    },
+    home: {
+      eyebrow: 'Fan Avia',
+      title: 'Football trips and live airfare windows',
+      subtitle: 'Choose matches, jump to ticket checkout, and compare outbound/return fares around kickoff time.',
+    },
+    search: {
+      originCityLabel: 'Origin city',
+      originPlaceholder: 'Moscow',
+      loading: 'Loading...',
+      reloadMatches: 'Reload matches',
+      refreshAirfare: 'Refresh airfare',
+    },
+    errors: {
+      selectOriginFromList: 'Select origin city from list',
+    },
+    dashboard: {
+      upcomingMatches: 'Upcoming matches',
+      airfare: 'Airfare',
+      selectedMatch: 'Selected match #{{id}}',
+    },
+    matchPage: {
+      backToMatches: 'Back to matches',
+      loadingMatch: 'Loading match...',
+      matchNumber: 'Match #{{id}}',
+      unknownCity: 'Unknown city',
+      unknownStadium: 'Unknown stadium',
+      kickoff: 'Kickoff',
+      airport: 'Airport',
+      clubs: 'Clubs',
+      buyMatchTicket: 'Buy match ticket',
+      bestFare: 'Best fare: {{price}}',
+      slotDate: 'Slot: {{slot}} • Date: {{date}}',
+    },
+    matchList: {
+      empty: 'No matches loaded yet.',
+      matchNumber: 'Match #{{id}}',
+      city: 'City',
+      stadium: 'Stadium',
+      destinationAirport: 'Destination airport',
+      homeAway: 'Home/Away',
+      airfare: 'Airfare',
+      bestAirfare: 'Best airfare',
+      from: 'from',
+      noPrices: 'no prices yet',
+      openDetails: 'Open details',
+      buyMatchTicket: 'Buy match ticket',
+    },
+    airfare: {
+      loading: 'Loading airfare...',
+      selectMatch: 'Select a match to load airfare slots.',
+      title: 'Airfare slots',
+      matchTickets: 'Match tickets',
+      noPrices: 'No prices',
+      options: 'Options',
+      buyViaAviasales: 'Buy via Aviasales',
+      slots: {
+        FARE_SLOT_OUT_D_MINUS_2: 'Outbound: 2 days before',
+        FARE_SLOT_OUT_D_MINUS_1: 'Outbound: 1 day before',
+        FARE_SLOT_OUT_D0_ARRIVE_BY: 'Outbound: match day',
+        FARE_SLOT_RET_D0_DEPART_AFTER: 'Return: match day',
+        FARE_SLOT_RET_D_PLUS_1: 'Return: next day',
+        FARE_SLOT_RET_D_PLUS_2: 'Return: +2 days',
+      },
+    },
+    citySelect: {
+      noResults: 'No matches for city',
+    },
+    common: {
+      na: '-',
+    },
+  },
+}
