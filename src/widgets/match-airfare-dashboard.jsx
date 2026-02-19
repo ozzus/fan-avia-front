@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchMatches } from '../entities/match/api/fetch-matches'
 import { fetchAirfareByMatch } from '../entities/airfare/api/fetch-airfare-by-match'
 import MatchList from '../entities/match/ui/match-list'
@@ -68,6 +68,7 @@ function MatchAirfareDashboard() {
 
   const [matchesLoading, setMatchesLoading] = useState(false)
   const [airfareLoading, setAirfareLoading] = useState(false)
+  const isFirstClubRender = useRef(true)
 
   const selectedItem = useMemo(
     () => items.find((item) => String(item.match?.match_id) === String(selectedMatchId)),
@@ -152,6 +153,16 @@ function MatchAirfareDashboard() {
     void loadMatches()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (isFirstClubRender.current) {
+      isFirstClubRender.current = false
+      return
+    }
+
+    void loadMatches()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId])
 
   function handleClubIdChange(nextClubId) {
     const normalized = normalizeClubId(nextClubId)
