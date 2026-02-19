@@ -38,8 +38,7 @@ function getInitialParams() {
 }
 
 function pickDefaultMatchId(items) {
-  const withPrices = items.find((item) => !item.airfare_error)
-  return withPrices?.match?.match_id || items[0]?.match?.match_id || ''
+  return items[0]?.match?.match_id || ''
 }
 
 function updateQuery(originCity, originIata, selectedMatchId, clubId) {
@@ -261,3 +260,4 @@ function MatchAirfareDashboard() {
 }
 
 export default MatchAirfareDashboard
+
