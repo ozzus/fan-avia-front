@@ -10,7 +10,7 @@ function formatPrice(value, locale) {
   }).format(Number(value))
 }
 
-function MatchList({ items, selectedMatchId, onSelect, originCity, clubId }) {
+function MatchList({ items, selectedMatchId, onSelect, originCity, clubId, clubNamesById }) {
   const { locale, t } = useI18n()
 
   if (!items.length) {
@@ -34,8 +34,8 @@ function MatchList({ items, selectedMatchId, onSelect, originCity, clubId }) {
           detailsParams.set('club_id', normalizedClubId)
         }
         const detailsLink = `/matches/${match.match_id}?${detailsParams.toString()}`
-        const homeClub = getClubName(match.club_home_id, locale)
-        const awayClub = getClubName(match.club_away_id, locale)
+        const homeClub = getClubName(match.club_home_id, clubNamesById)
+        const awayClub = getClubName(match.club_away_id, clubNamesById)
 
         return (
           <article key={match.match_id} className={`match-card${isActive ? ' active' : ''}`} style={{ animationDelay: `${index * 70}ms` }}>

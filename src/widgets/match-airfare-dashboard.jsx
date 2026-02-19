@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchMatches } from '../entities/match/api/fetch-matches'
+import { fetchClubs } from '../entities/club/api/fetch-clubs'
 import { fetchAirfareByMatch } from '../entities/airfare/api/fetch-airfare-by-match'
 import MatchList from '../entities/match/ui/match-list'
 import AirfareTable from '../entities/airfare/ui/airfare-table'
 import MatchSearchForm from '../features/match-search/ui/match-search-form'
 import { originCities } from '../shared/config/origin-cities'
 import { getDefaultOrigin, resolveOriginInput } from '../shared/lib/origin'
-import { getClubOptions, normalizeClubId, readStoredClubId, writeStoredClubId } from '../shared/lib/club'
+import {
+  buildClubNameMap,
+  buildClubOptions,
+  normalizeClubId,
+  readStoredClubId,
+  writeStoredClubId,
+} from '../shared/lib/club'
 import { useI18n } from '../shared/i18n/use-i18n'
 
 const DEFAULT_LIMIT = 12
@@ -59,6 +66,7 @@ function MatchAirfareDashboard() {
 
   const [originCity, setOriginCity] = useState(initial.originCity)
   const [clubId, setClubId] = useState(initial.clubId)
+  const [clubs, setClubs] = useState([])
   const [items, setItems] = useState([])
   const [selectedMatchId, setSelectedMatchId] = useState(initial.selected)
   const [loadError, setLoadError] = useState('')
@@ -78,7 +86,8 @@ function MatchAirfareDashboard() {
   const selectedMatch = selectedItem?.match || null
 
   const resolvedOrigin = useMemo(() => resolveOriginInput({ city: originCity }), [originCity])
-  const clubOptions = useMemo(() => getClubOptions(locale), [locale])
+  const clubOptions = useMemo(() => buildClubOptions(clubs, locale), [clubs, locale])
+  const clubNamesById = useMemo(() => buildClubNameMap(clubs, locale), [clubs, locale])
 
   async function loadAirfare(matchId, originIata, currentOriginCity = originCity, currentClubId = clubId) {
     setAirfareLoading(true)
@@ -150,6 +159,28 @@ function MatchAirfareDashboard() {
   }
 
   useEffect(() => {
+    let cancelled = false
+
+    async function loadClubs() {
+      try {
+        const loaded = await fetchClubs()
+        if (!cancelled) {
+          setClubs(loaded)
+        }
+      } catch {
+        if (!cancelled) {
+          setClubs([])
+        }
+      }
+    }
+
+    void loadClubs()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
     void loadMatches()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -209,6 +240,7 @@ function MatchAirfareDashboard() {
             onSelect={handleSelectMatch}
             originCity={originCity}
             clubId={clubId}
+            clubNamesById={clubNamesById}
           />
         </div>
 

@@ -1,12 +1,13 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import AirfareTable from '../entities/airfare/ui/airfare-table'
+import { fetchClubs } from '../entities/club/api/fetch-clubs'
 import { fetchAirfareByMatch } from '../entities/airfare/api/fetch-airfare-by-match'
 import { fetchMatchById } from '../entities/match/api/fetch-match-by-id'
 import { pickBestAirfareOption } from '../shared/lib/airfare-offer'
 import { saveAviasalesRoute } from '../shared/lib/save-aviasales-route'
 import { originCities } from '../shared/config/origin-cities'
+import { buildClubNameMap, getClubName } from '../shared/lib/club'
 import { getDefaultOrigin, resolveOriginInput } from '../shared/lib/origin'
-import { getClubName } from '../shared/lib/club'
 import { useI18n } from '../shared/i18n/use-i18n'
 import CitySelect from '../shared/ui/city-select'
 import LanguageSwitcher from '../shared/ui/language-switcher'
@@ -44,6 +45,7 @@ function MatchPage({ matchId }) {
   const [originCity, setOriginCity] = useState(initialOrigin.city)
 
   const [match, setMatch] = useState(null)
+  const [clubNamesById, setClubNamesById] = useState({})
   const [matchLoading, setMatchLoading] = useState(false)
   const [matchError, setMatchError] = useState('')
 
@@ -57,8 +59,8 @@ function MatchPage({ matchId }) {
     () => pickBestAirfareOption(airfareData, resolvedOrigin?.iata, match?.destination_airport_iata),
     [airfareData, match?.destination_airport_iata, resolvedOrigin],
   )
-  const homeClubName = getClubName(match?.club_home_id, locale)
-  const awayClubName = getClubName(match?.club_away_id, locale)
+  const homeClubName = getClubName(match?.club_home_id, clubNamesById)
+  const awayClubName = getClubName(match?.club_away_id, clubNamesById)
 
   async function loadAirfare(currentMatchId, origin) {
     setAirfareLoading(true)
@@ -75,6 +77,28 @@ function MatchPage({ matchId }) {
       setAirfareLoading(false)
     }
   }
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadClubDictionary() {
+      try {
+        const clubs = await fetchClubs()
+        if (!cancelled) {
+          setClubNamesById(buildClubNameMap(clubs, locale))
+        }
+      } catch {
+        if (!cancelled) {
+          setClubNamesById({})
+        }
+      }
+    }
+
+    void loadClubDictionary()
+    return () => {
+      cancelled = true
+    }
+  }, [locale])
 
   useEffect(() => {
     async function bootstrap() {
@@ -131,7 +155,7 @@ function MatchPage({ matchId }) {
           <section className="hero hero-match">
             <p className="eyebrow">{t('matchPage.matchNumber', { id: match.match_id })}</p>
             <h1>
-              {match.city || t('matchPage.unknownCity')} • {match.stadium || t('matchPage.unknownStadium')}
+              {match.city || t('matchPage.unknownCity')} � {match.stadium || t('matchPage.unknownStadium')}
             </h1>
             <div className="match-meta">
               <span className="match-pill">
@@ -209,4 +233,3 @@ function MatchPage({ matchId }) {
 }
 
 export default MatchPage
-
