@@ -1,5 +1,6 @@
-﻿import { getDefaultOrigin } from '../../../shared/lib/origin'
+import { getDefaultOrigin } from '../../../shared/lib/origin'
 import { useI18n } from '../../../shared/i18n/use-i18n'
+import { getClubName, normalizeClubId } from '../../../shared/lib/club'
 
 function formatPrice(value, locale) {
   return new Intl.NumberFormat(locale, {
@@ -9,7 +10,7 @@ function formatPrice(value, locale) {
   }).format(Number(value))
 }
 
-function MatchList({ items, selectedMatchId, onSelect, originCity }) {
+function MatchList({ items, selectedMatchId, onSelect, originCity, clubId }) {
   const { locale, t } = useI18n()
 
   if (!items.length) {
@@ -26,7 +27,15 @@ function MatchList({ items, selectedMatchId, onSelect, originCity }) {
 
         const isActive = String(selectedMatchId) === String(match.match_id)
         const fallbackCity = getDefaultOrigin().city
-        const detailsLink = `/matches/${match.match_id}?origin_city=${encodeURIComponent(originCity || fallbackCity)}`
+        const detailsParams = new URLSearchParams()
+        detailsParams.set('origin_city', originCity || fallbackCity)
+        const normalizedClubId = normalizeClubId(clubId)
+        if (normalizedClubId) {
+          detailsParams.set('club_id', normalizedClubId)
+        }
+        const detailsLink = `/matches/${match.match_id}?${detailsParams.toString()}`
+        const homeClub = getClubName(match.club_home_id, locale)
+        const awayClub = getClubName(match.club_away_id, locale)
 
         return (
           <article key={match.match_id} className={`match-card${isActive ? ' active' : ''}`} style={{ animationDelay: `${index * 70}ms` }}>
@@ -46,7 +55,7 @@ function MatchList({ items, selectedMatchId, onSelect, originCity }) {
                 <b>{t('matchList.destinationAirport')}:</b> {match.destination_airport_iata || t('common.na')}
               </p>
               <p>
-                <b>{t('matchList.homeAway')}:</b> {match.club_home_id || t('common.na')} / {match.club_away_id || t('common.na')}
+                <b>{t('matchList.homeAway')}:</b> {homeClub || t('common.na')} / {awayClub || t('common.na')}
               </p>
 
               {item.airfare_error ? (
@@ -83,4 +92,3 @@ function MatchList({ items, selectedMatchId, onSelect, originCity }) {
 }
 
 export default MatchList
-

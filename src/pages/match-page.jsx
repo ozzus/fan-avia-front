@@ -6,6 +6,7 @@ import { pickBestAirfareOption } from '../shared/lib/airfare-offer'
 import { saveAviasalesRoute } from '../shared/lib/save-aviasales-route'
 import { originCities } from '../shared/config/origin-cities'
 import { getDefaultOrigin, resolveOriginInput } from '../shared/lib/origin'
+import { getClubName } from '../shared/lib/club'
 import { useI18n } from '../shared/i18n/use-i18n'
 import CitySelect from '../shared/ui/city-select'
 import LanguageSwitcher from '../shared/ui/language-switcher'
@@ -56,6 +57,8 @@ function MatchPage({ matchId }) {
     () => pickBestAirfareOption(airfareData, resolvedOrigin?.iata, match?.destination_airport_iata),
     [airfareData, match?.destination_airport_iata, resolvedOrigin],
   )
+  const homeClubName = getClubName(match?.club_home_id, locale)
+  const awayClubName = getClubName(match?.club_away_id, locale)
 
   async function loadAirfare(currentMatchId, origin) {
     setAirfareLoading(true)
@@ -138,7 +141,7 @@ function MatchPage({ matchId }) {
                 {t('matchPage.airport')}: {match.destination_airport_iata || t('common.na')}
               </span>
               <span className="match-pill">
-                {t('matchPage.clubs')}: {match.club_home_id || t('common.na')} / {match.club_away_id || t('common.na')}
+                {t('matchPage.clubs')}: {homeClubName || t('common.na')} / {awayClubName || t('common.na')}
               </span>
             </div>
 
