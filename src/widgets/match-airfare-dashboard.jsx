@@ -167,6 +167,9 @@ function MatchAirfareDashboard() {
   function handleClubIdChange(nextClubId) {
     const normalized = normalizeClubId(nextClubId)
     setClubId(normalized)
+    setSelectedMatchId('')
+    setAirfareData(null)
+    setAirfareError('')
     writeStoredClubId(normalized)
   }
 
