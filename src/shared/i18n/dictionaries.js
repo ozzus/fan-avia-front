@@ -18,6 +18,8 @@ export const dictionaries = {
     search: {
       originCityLabel: 'Город вылета',
       originPlaceholder: 'Москва',
+      clubLabel: 'Клуб РПЛ',
+      allClubs: 'Все клубы',
       loading: 'Загрузка...',
       reloadMatches: 'Обновить матчи',
       refreshAirfare: 'Обновить перелеты',
@@ -97,6 +99,8 @@ export const dictionaries = {
     search: {
       originCityLabel: 'Origin city',
       originPlaceholder: 'Moscow',
+      clubLabel: 'RPL club',
+      allClubs: 'All clubs',
       loading: 'Loading...',
       reloadMatches: 'Reload matches',
       refreshAirfare: 'Refresh airfare',

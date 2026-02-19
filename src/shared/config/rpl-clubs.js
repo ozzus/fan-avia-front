@@ -1,0 +1,18 @@
+export const rplClubs = [
+  { id: '1', nameRu: 'Спартак Москва', nameEn: 'Spartak Moscow' },
+  { id: '2', nameRu: 'ПФК ЦСКА', nameEn: 'PFC CSKA' },
+  { id: '3', nameRu: 'Зенит', nameEn: 'Zenit' },
+  { id: '4', nameRu: 'Балтика', nameEn: 'Baltika' },
+  { id: '5', nameRu: 'Локомотив', nameEn: 'Lokomotiv' },
+  { id: '7', nameRu: 'Динамо Москва', nameEn: 'Dynamo Moscow' },
+  { id: '10', nameRu: 'Крылья Советов', nameEn: 'Krylia Sovetov' },
+  { id: '11', nameRu: 'Ростов', nameEn: 'Rostov' },
+  { id: '125', nameRu: 'Динамо Махачкала', nameEn: 'Dynamo Makhachkala' },
+  { id: '444', nameRu: 'Факел', nameEn: 'Fakel' },
+  { id: '504', nameRu: 'Оренбург', nameEn: 'Orenburg' },
+  { id: '525', nameRu: 'Сочи', nameEn: 'Sochi' },
+  { id: '584', nameRu: 'Краснодар', nameEn: 'Krasnodar' },
+  { id: '702', nameRu: 'Ахмат', nameEn: 'Akhmat' },
+  { id: '704', nameRu: 'Пари НН', nameEn: 'Pari NN' },
+  { id: '807', nameRu: 'Рубин', nameEn: 'Rubin' },
+]

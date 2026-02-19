@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchMatches } from '../entities/match/api/fetch-matches'
 import { fetchAirfareByMatch } from '../entities/airfare/api/fetch-airfare-by-match'
 import MatchList from '../entities/match/ui/match-list'
@@ -6,6 +6,7 @@ import AirfareTable from '../entities/airfare/ui/airfare-table'
 import MatchSearchForm from '../features/match-search/ui/match-search-form'
 import { originCities } from '../shared/config/origin-cities'
 import { getDefaultOrigin, resolveOriginInput } from '../shared/lib/origin'
+import { getClubOptions, normalizeClubId, readStoredClubId, writeStoredClubId } from '../shared/lib/club'
 import { useI18n } from '../shared/i18n/use-i18n'
 
 const DEFAULT_LIMIT = 12
@@ -19,9 +20,13 @@ function getInitialParams() {
       iata: params.get('origin_iata'),
     }) || defaultOrigin
 
+  const clubFromQuery = normalizeClubId(params.get('club_id'))
+  const storedClub = readStoredClubId()
+
   return {
     originCity: resolvedOrigin.city,
     selected: params.get('match_id') || '',
+    clubId: clubFromQuery || storedClub || '',
   }
 }
 
@@ -30,10 +35,16 @@ function pickDefaultMatchId(items) {
   return withPrices?.match?.match_id || items[0]?.match?.match_id || ''
 }
 
-function updateQuery(originCity, originIata, selectedMatchId) {
+function updateQuery(originCity, originIata, selectedMatchId, clubId) {
   const params = new URLSearchParams()
   params.set('origin_city', originCity)
   params.set('origin_iata', originIata)
+
+  const normalizedClubId = normalizeClubId(clubId)
+  if (normalizedClubId) {
+    params.set('club_id', normalizedClubId)
+  }
+
   if (selectedMatchId) {
     params.set('match_id', selectedMatchId)
   }
@@ -43,10 +54,11 @@ function updateQuery(originCity, originIata, selectedMatchId) {
 }
 
 function MatchAirfareDashboard() {
-  const { t } = useI18n()
+  const { locale, t } = useI18n()
   const initial = getInitialParams()
 
   const [originCity, setOriginCity] = useState(initial.originCity)
+  const [clubId, setClubId] = useState(initial.clubId)
   const [items, setItems] = useState([])
   const [selectedMatchId, setSelectedMatchId] = useState(initial.selected)
   const [loadError, setLoadError] = useState('')
@@ -65,15 +77,16 @@ function MatchAirfareDashboard() {
   const selectedMatch = selectedItem?.match || null
 
   const resolvedOrigin = useMemo(() => resolveOriginInput({ city: originCity }), [originCity])
+  const clubOptions = useMemo(() => getClubOptions(locale), [locale])
 
-  async function loadAirfare(matchId, originIata, currentOriginCity = originCity) {
+  async function loadAirfare(matchId, originIata, currentOriginCity = originCity, currentClubId = clubId) {
     setAirfareLoading(true)
     setAirfareError('')
 
     try {
       const data = await fetchAirfareByMatch(matchId, originIata)
       setAirfareData(data)
-      updateQuery(currentOriginCity, originIata, String(matchId))
+      updateQuery(currentOriginCity, originIata, String(matchId), currentClubId)
     } catch (error) {
       setAirfareData(null)
       setAirfareError(error.message)
@@ -93,6 +106,9 @@ function MatchAirfareDashboard() {
     setAirfareError('')
 
     const origin = resolveOriginInput({ city: originCity })
+    const normalizedClubId = normalizeClubId(clubId)
+    writeStoredClubId(normalizedClubId)
+
     if (!origin) {
       setItems([])
       setSelectedMatchId('')
@@ -105,6 +121,7 @@ function MatchAirfareDashboard() {
       const data = await fetchMatches({
         limit: DEFAULT_LIMIT,
         originIata: origin.iata,
+        clubId: normalizedClubId,
       })
 
       const loadedItems = data?.items || []
@@ -116,16 +133,16 @@ function MatchAirfareDashboard() {
         : fallbackId
 
       setSelectedMatchId(preferredId)
-      updateQuery(origin.city, origin.iata, preferredId)
+      updateQuery(origin.city, origin.iata, preferredId, normalizedClubId)
 
       if (preferredId) {
-        await loadAirfare(preferredId, origin.iata, origin.city)
+        await loadAirfare(preferredId, origin.iata, origin.city, normalizedClubId)
       }
     } catch (error) {
       setItems([])
       setSelectedMatchId('')
       setLoadError(error.message)
-      updateQuery(origin.city, origin.iata, '')
+      updateQuery(origin.city, origin.iata, '', normalizedClubId)
     } finally {
       setMatchesLoading(false)
     }
@@ -136,6 +153,12 @@ function MatchAirfareDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  function handleClubIdChange(nextClubId) {
+    const normalized = normalizeClubId(nextClubId)
+    setClubId(normalized)
+    writeStoredClubId(normalized)
+  }
+
   async function handleSelectMatch(matchId) {
     setSelectedMatchId(matchId)
 
@@ -145,7 +168,7 @@ function MatchAirfareDashboard() {
       return
     }
 
-    await loadAirfare(matchId, resolvedOrigin.iata, resolvedOrigin.city)
+    await loadAirfare(matchId, resolvedOrigin.iata, resolvedOrigin.city, clubId)
   }
 
   return (
@@ -154,6 +177,9 @@ function MatchAirfareDashboard() {
         originCityValue={originCity}
         cityOptions={originCities}
         onOriginCityChange={setOriginCity}
+        clubIdValue={clubId}
+        clubOptions={clubOptions}
+        onClubIdChange={handleClubIdChange}
         onSubmit={loadMatches}
         loading={matchesLoading}
       />
@@ -163,7 +189,13 @@ function MatchAirfareDashboard() {
       <section className="content-grid">
         <div>
           <h2>{t('dashboard.upcomingMatches')}</h2>
-          <MatchList items={items} selectedMatchId={selectedMatchId} onSelect={handleSelectMatch} originCity={originCity} />
+          <MatchList
+            items={items}
+            selectedMatchId={selectedMatchId}
+            onSelect={handleSelectMatch}
+            originCity={originCity}
+            clubId={clubId}
+          />
         </div>
 
         <div>
@@ -183,5 +215,3 @@ function MatchAirfareDashboard() {
 }
 
 export default MatchAirfareDashboard
-
-
