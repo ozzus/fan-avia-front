@@ -1,4 +1,6 @@
-const CLUB_STORAGE_KEY = 'fan-avia.club-id'
+import { deleteCookie, readCookie, writeCookie } from './cookie'
+
+const CLUB_COOKIE_KEY = 'fan_avia_club_id'
 
 export function normalizeClubId(value) {
   const raw = String(value || '').trim()
@@ -86,24 +88,16 @@ export function getClubName(clubId, namesById) {
 }
 
 export function readStoredClubId() {
-  try {
-    return normalizeClubId(window.localStorage.getItem(CLUB_STORAGE_KEY))
-  } catch {
-    return ''
-  }
+  return normalizeClubId(readCookie(CLUB_COOKIE_KEY))
 }
 
 export function writeStoredClubId(clubId) {
   const normalized = normalizeClubId(clubId)
 
-  try {
-    if (normalized) {
-      window.localStorage.setItem(CLUB_STORAGE_KEY, normalized)
-      return
-    }
-
-    window.localStorage.removeItem(CLUB_STORAGE_KEY)
-  } catch {
-    // Ignore localStorage write errors.
+  if (normalized) {
+    writeCookie(CLUB_COOKIE_KEY, normalized)
+    return
   }
+
+  deleteCookie(CLUB_COOKIE_KEY)
 }

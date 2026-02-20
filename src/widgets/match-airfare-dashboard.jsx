@@ -6,7 +6,7 @@ import MatchList from '../entities/match/ui/match-list'
 import AirfareTable from '../entities/airfare/ui/airfare-table'
 import MatchSearchForm from '../features/match-search/ui/match-search-form'
 import { originCities } from '../shared/config/origin-cities'
-import { getDefaultOrigin, resolveOriginInput } from '../shared/lib/origin'
+import { getDefaultOrigin, readStoredOriginCity, resolveOriginInput, writeStoredOriginCity } from '../shared/lib/origin'
 import {
   buildClubNameMap,
   buildClubOptions,
@@ -21,11 +21,14 @@ const DEFAULT_LIMIT = 12
 function getInitialParams() {
   const params = new URLSearchParams(window.location.search)
   const defaultOrigin = getDefaultOrigin()
+  const storedOriginCity = readStoredOriginCity()
   const resolvedOrigin =
     resolveOriginInput({
       city: params.get('origin_city'),
       iata: params.get('origin_iata'),
-    }) || defaultOrigin
+    }) ||
+    resolveOriginInput({ city: storedOriginCity }) ||
+    defaultOrigin
 
   const clubFromQuery = normalizeClubId(params.get('club_id'))
   const storedClub = readStoredClubId()
@@ -95,6 +98,8 @@ function MatchAirfareDashboard() {
     try {
       const data = await fetchAirfareByMatch(matchId, originIata)
       setAirfareData(data)
+      writeStoredOriginCity(currentOriginCity)
+      writeStoredClubId(currentClubId)
       updateQuery(currentOriginCity, originIata, String(matchId), currentClubId)
     } catch (error) {
       setAirfareData(null)
@@ -125,6 +130,8 @@ function MatchAirfareDashboard() {
       setMatchesLoading(false)
       return
     }
+
+    writeStoredOriginCity(origin.city)
 
     try {
       const data = await fetchMatches({
@@ -238,6 +245,7 @@ function MatchAirfareDashboard() {
             selectedMatchId={selectedMatchId}
             onSelect={handleSelectMatch}
             originCity={originCity}
+            originIata={resolvedOrigin?.iata}
             clubId={clubId}
             clubNamesById={clubNamesById}
           />
@@ -260,4 +268,3 @@ function MatchAirfareDashboard() {
 }
 
 export default MatchAirfareDashboard
-

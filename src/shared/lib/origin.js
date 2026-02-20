@@ -1,6 +1,8 @@
-﻿import { originCities } from '../config/origin-cities'
+import { originCities } from '../config/origin-cities'
+import { deleteCookie, readCookie, writeCookie } from './cookie'
 
 const DEFAULT_ORIGIN = originCities[0]
+const ORIGIN_CITY_COOKIE_KEY = 'fan_avia_origin_city'
 
 function normalizeValue(value) {
   return String(value || '').trim().toLowerCase()
@@ -30,4 +32,19 @@ export function resolveOriginInput({ city, iata }) {
 
 export function getDefaultOrigin() {
   return DEFAULT_ORIGIN
+}
+
+export function readStoredOriginCity() {
+  const resolved = resolveOriginByCity(readCookie(ORIGIN_CITY_COOKIE_KEY))
+  return resolved?.city || ''
+}
+
+export function writeStoredOriginCity(city) {
+  const resolved = resolveOriginByCity(city)
+  if (resolved?.city) {
+    writeCookie(ORIGIN_CITY_COOKIE_KEY, resolved.city)
+    return
+  }
+
+  deleteCookie(ORIGIN_CITY_COOKIE_KEY)
 }

@@ -10,7 +10,20 @@ function formatPrice(value, locale) {
   }).format(Number(value))
 }
 
-function MatchList({ items, selectedMatchId, onSelect, originCity, clubId, clubNamesById }) {
+function formatKickoffMsk(value, locale) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return '-'
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Europe/Moscow',
+  }).format(date)
+}
+
+function MatchList({ items, selectedMatchId, onSelect, originCity, originIata, clubId, clubNamesById }) {
   const { locale, t } = useI18n()
 
   if (!items.length) {
@@ -26,22 +39,29 @@ function MatchList({ items, selectedMatchId, onSelect, originCity, clubId, clubN
         }
 
         const isActive = String(selectedMatchId) === String(match.match_id)
-        const fallbackCity = getDefaultOrigin().city
+        const fallbackOrigin = getDefaultOrigin()
         const detailsParams = new URLSearchParams()
-        detailsParams.set('origin_city', originCity || fallbackCity)
+        detailsParams.set('origin_city', originCity || fallbackOrigin.city)
+        detailsParams.set('origin_iata', String(originIata || fallbackOrigin.iata).toUpperCase())
+
         const normalizedClubId = normalizeClubId(clubId)
         if (normalizedClubId) {
           detailsParams.set('club_id', normalizedClubId)
         }
+
         const detailsLink = `/matches/${match.match_id}?${detailsParams.toString()}`
         const homeClub = getClubName(match.club_home_id, clubNamesById)
         const awayClub = getClubName(match.club_away_id, clubNamesById)
+
+        const hasRoundTrip = Number.isFinite(Number(item.best_round_trip_price))
 
         return (
           <article key={match.match_id} className={`match-card${isActive ? ' active' : ''}`} style={{ animationDelay: `${index * 70}ms` }}>
             <button type="button" className="match-card-head" onClick={() => onSelect(match.match_id)}>
               <strong>{t('matchList.matchNumber', { id: match.match_id })}</strong>
-              <span>{new Date(match.kickoff_utc).toLocaleString(locale)}</span>
+              <span>
+                {formatKickoffMsk(match.kickoff_utc, locale)} MSK
+              </span>
             </button>
 
             <div className="match-card-body">
@@ -61,6 +81,14 @@ function MatchList({ items, selectedMatchId, onSelect, originCity, clubId, clubN
               {item.airfare_error ? (
                 <p className="muted">
                   <b>{t('matchList.airfare')}:</b> {item.airfare_error}
+                </p>
+              ) : hasRoundTrip ? (
+                <p className="muted">
+                  <b>{t('matchList.bestAirfare')}:</b> {formatPrice(item.best_round_trip_price, locale)}
+                  {' ('}
+                  {locale === 'ru' ? 'туда' : 'outbound'}: {formatPrice(item.best_outbound_price, locale)},{' '}
+                  {locale === 'ru' ? 'обратно' : 'return'}: {formatPrice(item.best_return_price, locale)}
+                  {')'}
                 </p>
               ) : Number.isFinite(Number(item.min_price)) ? (
                 <p className="muted">
