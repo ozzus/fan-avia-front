@@ -1,9 +1,14 @@
 import { requestJSON } from '../../../shared/api/request-json'
 import { normalizeClubId } from '../../../shared/lib/club'
 
-export async function fetchMatches({ limit = 12, originIata = 'MOW', clubId = '' } = {}) {
+export async function fetchMatches({ limit, originIata = 'MOW', clubId = '' } = {}) {
   const params = new URLSearchParams()
-  params.set('limit', String(limit))
+
+  const parsedLimit = Number(limit)
+  if (Number.isFinite(parsedLimit) && parsedLimit > 0) {
+    params.set('limit', String(Math.trunc(parsedLimit)))
+  }
+
   params.set('origin_iata', originIata.toUpperCase())
 
   const normalizedClubId = normalizeClubId(clubId)

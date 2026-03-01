@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchMatches } from '../entities/match/api/fetch-matches'
 import { fetchClubs } from '../entities/club/api/fetch-clubs'
-import { fetchAirfareByMatch } from '../entities/airfare/api/fetch-airfare-by-match'
 import MatchList from '../entities/match/ui/match-list'
-import AirfareTable from '../entities/airfare/ui/airfare-table'
 import MatchSearchForm from '../features/match-search/ui/match-search-form'
 import { originCities } from '../shared/config/origin-cities'
 import { getDefaultOrigin, readStoredOriginCity, resolveOriginInput, writeStoredOriginCity } from '../shared/lib/origin'
@@ -17,7 +15,6 @@ import {
 import { useI18n } from '../shared/i18n/use-i18n'
 
 const DEFAULT_LIMIT = 12
-
 function getInitialParams() {
   const params = new URLSearchParams(window.location.search)
   const defaultOrigin = getDefaultOrigin()
@@ -72,42 +69,12 @@ function MatchAirfareDashboard() {
   const [items, setItems] = useState([])
   const [selectedMatchId, setSelectedMatchId] = useState(initial.selected)
   const [loadError, setLoadError] = useState('')
-
-  const [airfareData, setAirfareData] = useState(null)
-  const [airfareError, setAirfareError] = useState('')
-
   const [matchesLoading, setMatchesLoading] = useState(false)
-  const [airfareLoading, setAirfareLoading] = useState(false)
   const isFirstClubRender = useRef(true)
-
-  const selectedItem = useMemo(
-    () => items.find((item) => String(item.match?.match_id) === String(selectedMatchId)),
-    [items, selectedMatchId],
-  )
-
-  const selectedMatch = selectedItem?.match || null
 
   const resolvedOrigin = useMemo(() => resolveOriginInput({ city: originCity }), [originCity])
   const clubOptions = useMemo(() => buildClubOptions(clubs, locale), [clubs, locale])
   const clubNamesById = useMemo(() => buildClubNameMap(clubs, locale), [clubs, locale])
-
-  async function loadAirfare(matchId, originIata, currentOriginCity = originCity, currentClubId = clubId) {
-    setAirfareLoading(true)
-    setAirfareError('')
-
-    try {
-      const data = await fetchAirfareByMatch(matchId, originIata)
-      setAirfareData(data)
-      writeStoredOriginCity(currentOriginCity)
-      writeStoredClubId(currentClubId)
-      updateQuery(currentOriginCity, originIata, String(matchId), currentClubId)
-    } catch (error) {
-      setAirfareData(null)
-      setAirfareError(error.message)
-    } finally {
-      setAirfareLoading(false)
-    }
-  }
 
   async function loadMatches(event) {
     if (event) {
@@ -116,8 +83,6 @@ function MatchAirfareDashboard() {
 
     setMatchesLoading(true)
     setLoadError('')
-    setAirfareData(null)
-    setAirfareError('')
 
     const origin = resolveOriginInput({ city: originCity })
     const normalizedClubId = normalizeClubId(clubId)
@@ -134,8 +99,10 @@ function MatchAirfareDashboard() {
     writeStoredOriginCity(origin.city)
 
     try {
+      const requestLimit = normalizedClubId ? undefined : DEFAULT_LIMIT
+
       const data = await fetchMatches({
-        limit: DEFAULT_LIMIT,
+        limit: requestLimit,
         originIata: origin.iata,
         clubId: normalizedClubId,
       })
@@ -150,10 +117,6 @@ function MatchAirfareDashboard() {
 
       setSelectedMatchId(preferredId)
       updateQuery(origin.city, origin.iata, preferredId, normalizedClubId)
-
-      if (preferredId) {
-        await loadAirfare(preferredId, origin.iata, origin.city, normalizedClubId)
-      }
     } catch (error) {
       setItems([])
       setSelectedMatchId('')
@@ -205,21 +168,15 @@ function MatchAirfareDashboard() {
     const normalized = normalizeClubId(nextClubId)
     setClubId(normalized)
     setSelectedMatchId('')
-    setAirfareData(null)
-    setAirfareError('')
     writeStoredClubId(normalized)
   }
 
-  async function handleSelectMatch(matchId) {
+  function handleSelectMatch(matchId) {
     setSelectedMatchId(matchId)
 
-    if (!resolvedOrigin) {
-      setAirfareData(null)
-      setAirfareError(t('errors.selectOriginFromList'))
-      return
+    if (resolvedOrigin) {
+      updateQuery(resolvedOrigin.city, resolvedOrigin.iata, String(matchId), clubId)
     }
-
-    await loadAirfare(matchId, resolvedOrigin.iata, resolvedOrigin.city, clubId)
   }
 
   return (
@@ -237,31 +194,24 @@ function MatchAirfareDashboard() {
 
       {loadError ? <p className="error">{loadError}</p> : null}
 
-      <section className="content-grid">
-        <div>
-          <h2>{t('dashboard.upcomingMatches')}</h2>
-          <MatchList
-            items={items}
-            selectedMatchId={selectedMatchId}
-            onSelect={handleSelectMatch}
-            originCity={originCity}
-            originIata={resolvedOrigin?.iata}
-            clubId={clubId}
-            clubNamesById={clubNamesById}
-          />
-        </div>
+      <section className="dashboard-table-box">
+        <header className="dashboard-table-head">
+          <span>{t('dashboard.headers.trip')}</span>
+          <span>{t('dashboard.headers.timeline')}</span>
+          <span>{t('dashboard.headers.flight')}</span>
+          <span>{t('dashboard.headers.stay')}</span>
+          <span>{t('dashboard.headers.tickets')}</span>
+        </header>
 
-        <div>
-          <h2>{t('dashboard.airfare')}</h2>
-          {selectedMatch ? <p className="muted">{t('dashboard.selectedMatch', { id: selectedMatch.match_id })}</p> : null}
-          <AirfareTable
-            data={airfareData}
-            loading={airfareLoading}
-            error={airfareError}
-            originIata={resolvedOrigin?.iata}
-            destinationIata={selectedMatch?.destination_airport_iata}
-          />
-        </div>
+        <MatchList
+          items={items}
+          selectedMatchId={selectedMatchId}
+          onSelect={handleSelectMatch}
+          originCity={originCity}
+          originIata={resolvedOrigin?.iata}
+          clubId={clubId}
+          clubNamesById={clubNamesById}
+        />
       </section>
     </>
   )
