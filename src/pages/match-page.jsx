@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import AirfareTable from '../entities/airfare/ui/airfare-table'
 import { fetchClubs } from '../entities/club/api/fetch-clubs'
 import { fetchAirfareByMatch } from '../entities/airfare/api/fetch-airfare-by-match'
 import { fetchMatchById } from '../entities/match/api/fetch-match-by-id'
 import { pickBestAirfareOption } from '../shared/lib/airfare-offer'
+import { getAirfareSlotTitle, isSameCityAirfareError } from '../shared/lib/airfare-slot-label'
 import { saveAviasalesRoute } from '../shared/lib/save-aviasales-route'
 import { originCities } from '../shared/config/origin-cities'
 import { buildClubNameMap, getClubName } from '../shared/lib/club'
@@ -83,6 +84,22 @@ function formatKickoffMsk(value, locale) {
   }).format(date)
 }
 
+function getMatchupLabel(match, homeClubName, awayClubName, t) {
+  if (homeClubName && awayClubName) {
+    return `${homeClubName} vs ${awayClubName}`
+  }
+
+  return t('matchPage.matchFallback', { id: match.match_id })
+}
+
+function toUserAirfareError(message, t) {
+  if (isSameCityAirfareError(message)) {
+    return t('matchList.sameCityMessage')
+  }
+
+  return message
+}
+
 function MatchPage({ matchId }) {
   const { locale, t } = useI18n()
   const initialOrigin = getInitialOrigin()
@@ -118,7 +135,7 @@ function MatchPage({ matchId }) {
       updateOriginQuery(currentMatchId, origin)
     } catch (error) {
       setAirfareData(null)
-      setAirfareError(error.message)
+      setAirfareError(toUserAirfareError(error.message, t))
     } finally {
       setAirfareLoading(false)
     }
@@ -199,7 +216,7 @@ function MatchPage({ matchId }) {
       {match ? (
         <>
           <section className="hero hero-match">
-            <p className="eyebrow">{t('matchPage.matchNumber', { id: match.match_id })}</p>
+            <p className="eyebrow">{getMatchupLabel(match, homeClubName, awayClubName, t)}</p>
             <h1>
               {match.city || t('matchPage.unknownCity')} - {match.stadium || t('matchPage.unknownStadium')}
             </h1>
@@ -243,7 +260,7 @@ function MatchPage({ matchId }) {
             </div>
 
             {bestOption ? (
-              <p className="hero-cta-note">{t('matchPage.slotDate', { slot: bestOption.slot, date: bestOption.date })}</p>
+              <p className="hero-cta-note">{t('matchPage.slotDate', { slot: getAirfareSlotTitle(bestOption.slot, t), date: bestOption.date })}</p>
             ) : null}
           </section>
 
@@ -279,4 +296,3 @@ function MatchPage({ matchId }) {
 }
 
 export default MatchPage
-

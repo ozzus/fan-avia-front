@@ -14,6 +14,7 @@ function HomePage() {
       <section className="hero">
         <p className="eyebrow">{t('home.eyebrow')}</p>
         <h1>{t('home.title')}</h1>
+        <p className="hero-partner">{t('home.partner')}</p>
         <p className="muted">{t('home.subtitle')}</p>
       </section>
 
