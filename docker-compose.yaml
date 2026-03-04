@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fan-avia/front:local
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
