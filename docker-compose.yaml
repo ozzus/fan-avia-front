@@ -1,0 +1,89 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  match-adapter:
+    build:
+      context: ../fan-avia
+      dockerfile: cmd/match-adapter/Dockerfile
+    image: fan-avia/match-adapter:local
+    restart: unless-stopped
+    env_file:
+      - ../fan-avia/cmd/match-adapter/.env
+    environment:
+      REDIS_ADDR: redis:6379
+      JAEGER: jaeger:14268
+      DEBUG_HTTP_ENABLED: "true"
+      DEBUG_HTTP_HOST: "0.0.0.0"
+      DEBUG_HTTP_PORT: "8086"
+    depends_on:
+      - redis
+      - jaeger
+    ports:
+      - "44045:44045"
+      - "8086:8086"
+
+  airfare-provider:
+    build:
+      context: ../fan-avia
+      dockerfile: cmd/airfare-provider/Dockerfile
+    image: fan-avia/airfare-provider:local
+    restart: unless-stopped
+    env_file:
+      - ../fan-avia/cmd/airfare-provider/.env
+    environment:
+      REDIS_ADDR: redis:6379
+      MATCH_ADAPTER_HOST: match-adapter
+      MATCH_ADAPTER_PORT: "44045"
+      JAEGER: jaeger:14268
+    depends_on:
+      - redis
+      - jaeger
+      - match-adapter
+    ports:
+      - "44044:44044"
+
+  api-gateway:
+    build:
+      context: ../fan-avia
+      dockerfile: cmd/api-gateway/Dockerfile
+    image: fan-avia/api-gateway:local
+    restart: unless-stopped
+    environment:
+      AIRFARE_ADDRESS: airfare-provider:44044
+      MATCH_ADDRESS: match-adapter:44045
+      JAEGER_ADDRESS: jaeger:14268
+      HTTP_PORT: "8080"
+    depends_on:
+      - airfare-provider
+      - match-adapter
+      - jaeger
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fan-avia/front:local
+    restart: unless-stopped
+    depends_on:
+      - api-gateway
+    ports:
+      - "3000:80"
+
+volumes:
+  redis_data:
